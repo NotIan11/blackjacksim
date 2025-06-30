@@ -231,18 +231,128 @@ def post_hand_play(hand, value, deck, dealer_hand, dealer_value,balance,bet,runn
                     [hand[0], draw_card(deck)],
                     [hand[1], draw_card(deck)]
                 ]
+
+                split_results =[]
+
                 for h in split_hands:
                     for card in h[1:]:
                         running_count += count(card)
                     print(f"\nPlaying split hand: {h}")
-                    deck, balance, bet, running_count = post_hand_play(
-                        h, optimal_hand(h), deck, dealer_hand[:], dealer_value, balance, bet, running_count
-                    )
+                    final_hand, final_value, final_bet, running_count = split_hand_play(h, optimal_hand(h), deck, balance, bet, running_count)
+                    split_results.append((final_hand,final_value,final_bet))
+                
+                time.sleep(1)
+
+                print("Dealer Hand:", dealer_hand)
+                time.sleep(1)
+
+                dealer_hand, dealer_value, deck, running_count = dealer(deck, dealer_value, dealer_hand, running_count)
+
+                print("Dealer Value:", dealer_value)
+
+                for final_hand, final_value, final_bet in split_results:
+                     print("\nYour Hand:", final_hand, "Value:", final_value)
+                     if final_value > 21:
+                        print("You busted this hand.")
+                     elif dealer_value > 21 or final_value > dealer_value:
+                        balance += final_bet * 2
+                        print("You win this hand!")
+                     elif dealer_value == final_value:
+                        balance += final_bet
+                        print("Push on this hand.")
+                     else:
+                        print("Dealer wins this hand.")
+                     time.sleep(1)
+
+                print("Balance:", balance)
                 break
+                    
 
         else: 
             print("Invalid. Please hit or stand.")
     return deck, balance, bet, running_count
+
+
+## Split Hand Play
+
+def split_hand_play(hand, value, deck,balance,bet,running_count):
+
+    while True:
+        action = input(f"Hit, Stand, or Double? The count is {running_count}.").lower()
+
+        ## Hitting ##
+
+        if action =="hit":
+            deck, running_count =check_reshuffle(deck,running_count=running_count)
+            card = draw_card(deck)
+            hand.append(card)
+            running_count += count(card)
+            print(f"You drew a {card}.")
+            time.sleep(1)
+
+            value = optimal_hand(hand)
+            print("Hand:", hand)
+            time.sleep(1)
+
+            print("Value:", value)
+
+            if value > 21:
+                print("Bust! You lose!")
+                time.sleep(1)
+                break
+
+            ## Standing ##
+        
+        elif action =="stand":
+            print("Final Hand:",hand)
+            time.sleep(1)
+            print("Final Value:", value)
+            time.sleep(1)
+            print("You Chose to Stand.")
+            break
+
+        
+        ## Doubling ##
+
+        elif action == "double":
+            if balance < bet:
+                print("You don't have enough money to double.")
+                continue
+            balance -= bet  
+            bet *= 2        
+
+
+            deck, running_count =check_reshuffle(deck, running_count=running_count)
+            card = draw_card(deck)
+            hand.append(card)
+            running_count += count(card)
+            print(f"You drew a {card}.")
+            time.sleep(1)
+
+            value = optimal_hand(hand)
+            print("Hand:", hand)
+            time.sleep(1)
+
+            print("Value:", value)
+
+            if value > 21:
+                print("Bust! You lose!")
+                time.sleep(1)
+                break
+
+            else:
+                print("You doubled. No more cards!")
+
+                print("Final Hand:",hand)
+                time.sleep(1)
+
+                print("Final Value:", value)
+                time.sleep(1)
+                break
+
+    return hand, value, bet, running_count
+
+
 
 ## Counting Cards ##
 

@@ -1,6 +1,90 @@
 import random
 import time
 
+## Card Display Functions ##
+
+def get_card_art(card):
+    """
+    Convert a card to ASCII art representation
+    """
+    if card == 'A':
+        rank = 'A'
+    elif card in ['J', 'Q', 'K']:
+        rank = card
+    else:
+        rank = str(card)
+    
+    # Pad single digits with space for alignment
+    if len(rank) == 1:
+        rank = rank + ' '
+    
+    card_art = [
+        f"┌─────────┐",
+        f"│ {rank}      │",
+        f"│         │",
+        f"│         │",
+        f"│         │",
+        f"│      {rank} │",
+        f"└─────────┘"
+    ]
+    return card_art
+
+def get_hidden_card_art():
+    """
+    Return ASCII art for a hidden card
+    """
+    return [
+        "┌─────────┐",
+        "│ █ █ █ █ │",
+        "│ █ █ █ █ │",
+        "│ █ █ █ █ │",
+        "│ █ █ █ █ │",
+        "│ █ █ █ █ │",
+        "└─────────┘"
+    ]
+
+def display_hand(hand, title="Hand", hide_second=False):
+    """
+    Display a hand of cards as ASCII art
+    """
+    print(f"\n{title}:")
+    
+    if not hand:
+        print("No cards")
+        return
+    
+    # Get card art for each card
+    cards_art = []
+    for i, card in enumerate(hand):
+        if hide_second and i == 1:
+            cards_art.append(get_hidden_card_art())
+        else:
+            cards_art.append(get_card_art(card))
+    
+    # Display cards side by side
+    for row in range(7):  # Each card has 7 rows
+        line = ""
+        for card_art in cards_art:
+            line += card_art[row] + " "
+        print(line)
+    
+    # Show hand value if not hiding cards
+    if not hide_second:
+        value = optimal_hand(hand)
+        print(f"Value: {value}")
+
+def display_dealer_hand(dealer_hand, hide_second=True):
+    """
+    Display dealer's hand, optionally hiding the second card
+    """
+    display_hand(dealer_hand, "Dealer Hand", hide_second)
+
+def display_player_hand(hand):
+    """
+    Display player's hand
+    """
+    display_hand(hand, "Your Hand")
+
 ## Starting Hand ##
 
 face_values = {
@@ -102,7 +186,7 @@ def dealer(deck,dealer_value,dealer_hand,running_count):
 
             running_count += count(card)
 
-            print("Dealer Hand:", dealer_hand)
+            display_dealer_hand(dealer_hand, hide_second=False)
             time.sleep(1)
 
             
@@ -132,15 +216,14 @@ def post_hand_play(hand, value, deck, dealer_hand, dealer_value,balance,bet,runn
             time.sleep(1)
 
             value = optimal_hand(hand)
-            print("Hand:", hand)
+            display_player_hand(hand)
             time.sleep(1)
 
-            print("Value:", value)
 
             if value > 21:
                 print("Bust! You lose!")
                 time.sleep(1)
-                print("Dealer Hand:", dealer_hand)
+                display_dealer_hand(dealer_hand, hide_second=False)
                 time.sleep(1)
                 print("Balance:", balance)
                 break
@@ -148,15 +231,14 @@ def post_hand_play(hand, value, deck, dealer_hand, dealer_value,balance,bet,runn
         ## Standing ##
         
         elif action =="stand":
-            print("Final Hand:",hand)
-            time.sleep(1)
-            print("Final Value:", value)
+            print("Final Hand:")
+            display_player_hand(hand)
             time.sleep(1)
             print("You Chose to Stand.")
 
             time.sleep(1)
 
-            print("Dealer Hand:", dealer_hand)
+            display_dealer_hand(dealer_hand, hide_second=False)
             time.sleep(1)
 
             dealer_hand, dealer_value, deck, running_count = dealer(deck, dealer_value, dealer_hand, running_count)
@@ -199,15 +281,14 @@ def post_hand_play(hand, value, deck, dealer_hand, dealer_value,balance,bet,runn
             time.sleep(1)
 
             value = optimal_hand(hand)
-            print("Hand:", hand)
+            display_player_hand(hand)
             time.sleep(1)
 
-            print("Value:", value)
 
             if value > 21:
                 print("Bust! You lose!")
                 time.sleep(1)
-                print("Dealer Hand:", dealer_hand)
+                display_dealer_hand(dealer_hand, hide_second=False)
                 time.sleep(1)
                 print("Balance:", balance)
                 break
@@ -215,13 +296,11 @@ def post_hand_play(hand, value, deck, dealer_hand, dealer_value,balance,bet,runn
             else:
                 print("You doubled. No more cards!")
 
-                print("Final Hand:",hand)
+                print("Final Hand:")
+                display_player_hand(hand)
                 time.sleep(1)
 
-                print("Final Value:", value)
-                time.sleep(1)
-
-                print("Dealer Hand:", dealer_hand)
+                display_dealer_hand(dealer_hand, hide_second=False)
                 time.sleep(1)
 
                 dealer_hand, dealer_value, deck, running_count = dealer(deck, dealer_value, dealer_hand, running_count)
@@ -261,13 +340,14 @@ def post_hand_play(hand, value, deck, dealer_hand, dealer_value,balance,bet,runn
                 for h in split_hands:
                     for card in h[1:]:
                         running_count += count(card)
-                    print(f"\nPlaying split hand: {h}")
+                    print(f"\nPlaying split hand:")
+                    display_player_hand(h)
                     final_hand, final_value, final_bet, running_count = split_hand_play(h, optimal_hand(h), deck, balance, bet, running_count)
                     split_results.append((final_hand,final_value,final_bet))
                 
                 time.sleep(1)
 
-                print("Dealer Hand:", dealer_hand)
+                display_dealer_hand(dealer_hand, hide_second=False)
                 time.sleep(1)
 
                 dealer_hand, dealer_value, deck, running_count = dealer(deck, dealer_value, dealer_hand, running_count)
@@ -275,7 +355,8 @@ def post_hand_play(hand, value, deck, dealer_hand, dealer_value,balance,bet,runn
                 print("Dealer Value:", dealer_value)
 
                 for final_hand, final_value, final_bet in split_results:
-                     print("\nYour Hand:", final_hand, "Value:", final_value)
+                     print(f"\nSplit Hand Result:")
+                     display_player_hand(final_hand)
                      if final_value > 21:
                         print("You busted this hand.")
                      elif dealer_value > 21 or final_value > dealer_value:
@@ -315,10 +396,9 @@ def split_hand_play(hand, value, deck,balance,bet,running_count):
             time.sleep(1)
 
             value = optimal_hand(hand)
-            print("Hand:", hand)
+            display_player_hand(hand)
             time.sleep(1)
 
-            print("Value:", value)
 
             if value > 21:
                 print("Bust! You lose!")
@@ -328,7 +408,8 @@ def split_hand_play(hand, value, deck,balance,bet,running_count):
             ## Standing ##
         
         elif action =="stand":
-            print("Final Hand:",hand)
+            print("Final Hand:")
+            display_player_hand(hand)
             time.sleep(1)
             print("Final Value:", value)
             time.sleep(1)
@@ -354,11 +435,8 @@ def split_hand_play(hand, value, deck,balance,bet,running_count):
             time.sleep(1)
 
             value = optimal_hand(hand)
-            print("Hand:", hand)
-            time.sleep(1)
-
-            print("Value:", value)
-
+            display_player_hand(hand)
+     
             if value > 21:
                 print("Bust! You lose!")
                 time.sleep(1)
@@ -367,7 +445,8 @@ def split_hand_play(hand, value, deck,balance,bet,running_count):
             else:
                 print("You doubled. No more cards!")
 
-                print("Final Hand:",hand)
+                print("Final Hand:")
+                display_player_hand(hand)
                 time.sleep(1)
 
                 print("Final Value:", value)
@@ -425,8 +504,8 @@ while True:
 
     shown_hand = [dealer_hand[0], '?']
 
-    print("Starting Hand:", hand, "\n", "Starting Value:", value)
-    print("Dealer Hand:", shown_hand)
+    display_player_hand(hand)
+    display_dealer_hand(dealer_hand, hide_second=True)
 
     if value == 21 and dealer_value != 21:
         balance += bet*2.5
@@ -437,7 +516,7 @@ while True:
 
     elif value != 21 and dealer_value == 21:
         time.sleep(1)
-        print("Dealer Hand:", dealer_hand)
+        display_dealer_hand(dealer_hand, hide_second=False)
         time.sleep(1)
         print("Dealer Blackjack! You lose!")
         time.sleep(1)

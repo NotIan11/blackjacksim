@@ -47,6 +47,29 @@ def optimal_hand(hand):
     return(value)
 
 
+def is_soft_17(hand):
+    """
+    Check if a hand is a soft 17 (equals 17 with an Ace counted as 11)
+    """
+    value = 0
+    high_ace_count = 0
+
+    for card in hand:
+        if isinstance(card, int):
+            value += card
+        elif card == 'A':
+            value += 11
+            high_ace_count += 1
+        else: 
+            value += face_values[card]
+    
+    # If the hand equals 17 and has at least one Ace counted as 11, it's soft
+    if value == 17 and high_ace_count > 0:
+        return True
+    
+    return False
+
+
 ## Betting ##
 
 def betting(balance, running_count):
@@ -70,7 +93,8 @@ def dealer(deck,dealer_value,dealer_hand,running_count):
 
     while True:
 
-        while dealer_value < 17:
+        # Hit on any hand below 17 OR on a soft 17
+        while dealer_value < 17 or (dealer_value == 17 and is_soft_17(dealer_hand)):
             deck, running_count = check_reshuffle(deck,running_count=running_count)
             card = draw_card(deck)
             dealer_hand.append(card)
